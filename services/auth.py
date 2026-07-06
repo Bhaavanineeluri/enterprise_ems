@@ -4,6 +4,9 @@ from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
 
 
+from models.employee import Employee
+from models.customer import Customer
+
 from models.user import User
 
 from schemas.user import (
@@ -51,11 +54,26 @@ def register_user(user: UserRegister, db: Session):
         role=user.role,
         mfa_enabled=False
     )
-
+    
     db.add(new_user)
     db.flush() 
     db.commit()
     db.refresh(new_user)
+# ---------------------------------
+# CREATE ROLE SPECIFIC PROFILE
+# ---------------------------------
+    if new_user.role == "customer":
+        customer = Customer(user_id=new_user.id)
+        db.add(customer)
+
+    elif new_user.role == "employee":
+        employee = Employee(
+        user_id=new_user.id,
+        designation="Employee"
+    )
+    db.add(employee)
+        
+    db.commit()
     
 
     

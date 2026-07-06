@@ -1,10 +1,10 @@
 from pydantic import BaseModel, EmailStr, Field
 from enum import Enum
-
+from core.roles import Role
 class UserRole(str, Enum):
-    admin = "admin"
-    employee = "employee"
-    customer = "customer"
+    ADMIN = "admin"
+    EMPLOYEE = "employee"
+    CUSTOMER = "customer"
 
 class UserRegister(BaseModel):
     full_name: str
@@ -58,4 +58,7 @@ class ResetPasswordRequest(BaseModel):
     email: EmailStr
     otp: str
     new_password: str
+    
+class UserRoleUpdate(BaseModel):
+    role: Role
 

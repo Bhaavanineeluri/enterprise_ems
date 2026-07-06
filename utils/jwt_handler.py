@@ -1,15 +1,16 @@
 from datetime import datetime, timedelta, UTC
-from jose import jwt
+from jose import jwt, JWTError
 
 SECRET_KEY = "your_secret_key"
-
 ALGORITHM = "HS256"
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 
+# -----------------------------------------
+# Create Access Token
+# -----------------------------------------
 def create_access_token(data: dict):
 
     to_encode = data.copy()
@@ -27,6 +28,9 @@ def create_access_token(data: dict):
     )
 
 
+# -----------------------------------------
+# Create Refresh Token
+# -----------------------------------------
 def create_refresh_token(data: dict):
 
     to_encode = data.copy()
@@ -42,3 +46,39 @@ def create_refresh_token(data: dict):
         SECRET_KEY,
         algorithm=ALGORITHM
     )
+
+
+# -----------------------------------------
+# Verify Access Token
+# -----------------------------------------
+def verify_access_token(token: str):
+
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        return payload
+
+    except JWTError:
+        return None
+
+
+# -----------------------------------------
+# Verify Refresh Token
+# -----------------------------------------
+def verify_refresh_token(token: str):
+
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        return payload
+
+    except JWTError:
+        return None
