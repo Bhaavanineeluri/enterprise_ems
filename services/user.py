@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from database import SessionLocal
 from models.user import User
-from schemas.user import UserRoleUpdate
+from schemas.user import UserRoleUpdate, UserResponse
 
 
 # ----------------------------------------
@@ -20,7 +20,11 @@ def get_db():
 # ----------------------------------------
 # Logged-in User Profile
 # ----------------------------------------
-def get_my_profile(current_user: User):
+def get_my_profile(current_user):
+    """
+    IMPORTANT: Do NOT type this as SQLAlchemy User.
+    Let FastAPI dependency handle it.
+    """
     return current_user
 
 
@@ -32,7 +36,12 @@ def get_all_users():
 
     try:
         users = db.query(User).all()
-        return users
+
+        # Convert ORM → Schema (SAFE FIX)
+        return [
+            UserResponse.model_validate(user)
+            for user in users
+        ]
 
     finally:
         db.close()

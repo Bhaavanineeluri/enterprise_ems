@@ -19,20 +19,21 @@ class Employee(Base):
 
     employee_code = Column(String(20), unique=True, nullable=True)
     designation = Column(String(100), nullable=True)
-    department = Column(String(100), nullable=True)
 
-    created_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now()
+    # OPTIONAL (recommended improvement)
+    department_id = Column(Integer, ForeignKey("departments.id"), nullable=True)
+
+    user = relationship(
+        "User",
+        back_populates="employee"
     )
+
+    department = relationship("Department")
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     updated_at = Column(
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now()
-    )
-
-    user = relationship(
-        "User",
-        back_populates="employee"
     )

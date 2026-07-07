@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from schemas.customer import CustomerCreate, CustomerResponse
-from services.customer_service import create_customer, get_customers, get_customer
+from services.customer import create_customer, get_customers, get_customer
 
 router = APIRouter(prefix="/customers", tags=["Customers"])
 

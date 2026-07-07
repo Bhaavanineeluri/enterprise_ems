@@ -1,35 +1,96 @@
-from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
-from models.customer import Customer
+from core.unit_of_work.uow import UnitOfWork
+from schemas.customer import CustomerCreate
 
 
-def create_customer(db: Session, data):
 
-    existing = db.query(Customer).filter(
-        Customer.customer_code == data.customer_code
-    ).first()
+def create_customer(
+    db:Session,
+    data:CustomerCreate
+):
+
+    uow = UnitOfWork(db)
+
+
+    existing = uow.customers.first_by(
+        db,
+        customer_code=data.customer_code
+    )
+
 
     if existing:
-        raise HTTPException(status_code=400, detail="Customer exists")
 
-    customer = Customer(**data.dict())
-
-    db.add(customer)
-    db.commit()
-    db.refresh(customer)
-
-    return customer
+        raise HTTPException(
+            status_code=400,
+            detail="Customer already exists"
+        )
 
 
-def get_customers(db: Session):
-    return db.query(Customer).all()
+
+    try:
+
+        customer = uow.customers.model(
+            **data.model_dump()
+        )
 
 
-def get_customer(db: Session, customer_id: int):
-    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+        uow.customers.create(
+            db,
+            customer
+        )
+
+
+        uow.commit()
+
+        uow.refresh(customer)
+
+
+        return customer
+
+
+    except Exception as e:
+
+        uow.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Customer creation failed: {str(e)}"
+        )
+
+
+
+
+def get_customers(db:Session):
+
+    uow = UnitOfWork(db)
+
+    return uow.customers.get_all(db)
+
+
+
+
+def get_customer(
+    db:Session,
+    customer_id:int
+):
+
+    uow = UnitOfWork(db)
+
+
+    customer = uow.customers.get(
+        db,
+        customer_id
+    )
+
 
     if not customer:
-        raise HTTPException(status_code=404, detail="Not found")
+
+        raise HTTPException(
+            status_code=404,
+            detail="Customer not found"
+        )
+
 
     return customer

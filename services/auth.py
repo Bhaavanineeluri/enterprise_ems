@@ -1,95 +1,206 @@
-from ipaddress import ip_address
-
 from fastapi import HTTPException, Request
 from sqlalchemy.orm import Session
 
-
-from models.employee import Employee
-from models.customer import Customer
-
 from models.user import User
+from models.customer import Customer
+from models.employee import Employee
 
 from schemas.user import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
     UserRegister,
-    UserRole,
+    UserRole
 )
+
+from core.unit_of_work.uow import UnitOfWork
 
 from services.login_history import create_login_history
 from services.otp import create_otp, verify_otp
-from services.token import generate_tokens
 
 from utils.password import hash_password, verify_password
-def register_user(user: UserRegister, db: Session):
-    
-    # -----------------------
-    # VALIDATE ROLE
-    # -----------------------
-    allowed_roles = [role.value for role in UserRole]
+
+from repositories.user import user_repository
+
+
+
+# =====================================================
+# REGISTER USER
+# =====================================================
+
+def register_user(
+    user: UserRegister,
+    db: Session
+):
+
+    uow = UnitOfWork(db)
+
+
+    allowed_roles = [
+        role.value
+        for role in UserRole
+    ]
+
 
     if user.role.value not in allowed_roles:
+
         raise HTTPException(
             status_code=400,
-            detail="Role must be admin, employee, or customer."
+            detail="Invalid role"
         )
 
-    # -----------------------
-    # CHECK DUPLICATES
-    # -----------------------
-    if db.query(User).filter(User.email == user.email).first():
-        raise HTTPException(status_code=400, detail="Email already exists")
 
-    if db.query(User).filter(User.phone == user.phone).first():
-        raise HTTPException(status_code=400, detail="Phone already exists")
 
-    # -----------------------
-    # CREATE USER
-    # -----------------------
-    new_user = User(
-        full_name=user.full_name,
-        email=user.email,
-        phone=user.phone,
-        password=hash_password(user.password),
-        role=user.role,
-        mfa_enabled=False
+    # Duplicate check
+
+    if uow.users.exists(
+        db,
+        email=user.email
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail="Email already exists"
+        )
+
+
+    if uow.users.exists(
+        db,
+        phone=user.phone
+    ):
+
+        raise HTTPException(
+            status_code=400,
+            detail="Phone already exists"
+        )
+
+
+
+    try:
+
+        # Create User
+
+        new_user = User(
+
+            full_name=user.full_name,
+
+            email=user.email,
+
+            phone=user.phone,
+
+            password=hash_password(
+                user.password
+            ),
+
+            role=user.role.value,
+
+            mfa_enabled=False
+        )
+
+
+        uow.users.create(
+            db,
+            new_user
+        )
+
+
+        # Need user id
+
+        uow.flush()
+
+
+
+        # Create profile
+
+        if user.role == UserRole.CUSTOMER:
+
+            customer = Customer(
+                user_id=new_user.id
+            )
+
+            uow.customers.create(
+                db,
+                customer
+            )
+
+
+
+        elif user.role in [
+            UserRole.EMPLOYEE,
+            UserRole.MANAGER
+        ]:
+
+
+            employee = Employee(
+
+                user_id=new_user.id,
+
+                designation=(
+                    "Manager"
+                    if user.role == UserRole.MANAGER
+                    else "Employee"
+                )
+            )
+
+
+            uow.employees.create(
+                db,
+                employee
+            )
+
+
+
+        # Single transaction commit
+
+        uow.commit()
+
+        uow.refresh(
+            new_user
+        )
+
+
+        return new_user
+
+
+
+    except Exception as e:
+
+        uow.rollback()
+
+        raise HTTPException(
+
+            status_code=500,
+
+            detail=f"Registration failed: {str(e)}"
+
+        )
+
+
+
+
+
+# =====================================================
+# LOGIN USER
+# =====================================================
+
+def login_user(
+    login_data,
+    db: Session,
+    request: Request
+):
+
+    ip_address = (
+        request.headers.get("x-forwarded-for")
+        or request.client.host
     )
-    
-    db.add(new_user)
-    db.flush() 
-    db.commit()
-    db.refresh(new_user)
-# ---------------------------------
-# CREATE ROLE SPECIFIC PROFILE
-# ---------------------------------
-    if new_user.role == "customer":
-        customer = Customer(user_id=new_user.id)
-        db.add(customer)
 
-    elif new_user.role == "employee":
-        employee = Employee(
-        user_id=new_user.id,
-        designation="Employee"
+
+
+    db_user = user_repository.first_by(
+        db,
+        email=login_data.email
     )
-    db.add(employee)
-        
-    db.commit()
-    
-
-    
-    return new_user
 
 
-
-def login_user(login_data, db: Session, request: Request):
-
-    ip_address = request.client.host
-
-    db_user = db.query(User).filter(
-        User.email == login_data.email
-    ).first()
-
-    # User not found
     if not db_user:
 
         create_login_history(
@@ -104,7 +215,8 @@ def login_user(login_data, db: Session, request: Request):
             detail="Invalid email or password"
         )
 
-    # Wrong password
+
+
     if not verify_password(
         login_data.password,
         db_user.password
@@ -117,12 +229,14 @@ def login_user(login_data, db: Session, request: Request):
             status="Failed"
         )
 
+
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password"
         )
 
-    # Successful login
+
+
     create_login_history(
         db=db,
         user_id=db_user.id,
@@ -130,66 +244,145 @@ def login_user(login_data, db: Session, request: Request):
         status="Success"
     )
 
+
     otp = create_otp(
         db=db,
         user_id=db_user.id,
         purpose="LOGIN"
     )
 
+
     return {
+
         "mfa_required": True,
+
         "message": "OTP sent successfully",
+
         "user_id": db_user.id,
+
         "otp": otp
-    } 
-def forgot_password(data: ForgotPasswordRequest, db: Session):
-    
-    user = db.query(User).filter(User.email == data.email).first()
+    }
+
+
+
+
+
+# =====================================================
+# FORGOT PASSWORD
+# =====================================================
+
+def forgot_password(
+    data: ForgotPasswordRequest,
+    db: Session
+):
+
+    user = user_repository.first_by(
+        db,
+        email=data.email
+    )
+
 
     if not user:
+
         raise HTTPException(
             status_code=404,
             detail="User not found"
         )
+
 
     otp = create_otp(
         db=db,
         user_id=user.id,
-        purpose="forgot_password"
+        purpose="FORGOT_PASSWORD"
     )
 
+
     return {
+
         "message": "OTP generated successfully",
+
         "otp": otp
+
     }
-    
-def reset_password(data: ResetPasswordRequest, db: Session):
-    
-    user = db.query(User).filter(User.email == data.email).first()
+
+
+
+
+
+# =====================================================
+# RESET PASSWORD
+# =====================================================
+
+def reset_password(
+    data: ResetPasswordRequest,
+    db: Session
+):
+
+    user = user_repository.first_by(
+        db,
+        email=data.email
+    )
+
 
     if not user:
+
         raise HTTPException(
             status_code=404,
             detail="User not found"
         )
 
+
+
     valid, message = verify_otp(
-    db=db,
-    user_id=user.id,
-    otp=data.otp,
-    purpose="forgot_password"
+
+        db=db,
+
+        user_id=user.id,
+
+        otp=data.otp,
+
+        purpose="FORGOT_PASSWORD"
+
     )
 
+
     if not valid:
+
         raise HTTPException(
             status_code=400,
             detail=message
         )
 
-    user.password = hash_password(data.new_password)
 
-    db.commit()
-    
-    return {
-        "message": "Password reset successful"
-    }
+
+    try:
+
+        user.password = hash_password(
+            data.new_password
+        )
+
+
+        db.commit()
+
+
+        return {
+
+            "message":
+            "Password reset successful"
+
+        }
+
+
+
+    except Exception as e:
+
+        db.rollback()
+
+
+        raise HTTPException(
+
+            status_code=500,
+
+            detail=f"Reset failed: {str(e)}"
+
+        )

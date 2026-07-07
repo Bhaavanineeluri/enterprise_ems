@@ -1,63 +1,113 @@
-from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
-from models.branch import Branch
-from models.company import Company
 from schemas.branch import BranchCreate
 
+from core.unit_of_work.uow import UnitOfWork
 
-def create_branch(db: Session, data: BranchCreate):
 
-    company = db.query(Company).filter(
-        Company.id == data.company_id
-    ).first()
+
+def create_branch(
+    db: Session,
+    data: BranchCreate
+):
+
+    uow = UnitOfWork(db)
+
+
+
+    company = uow.companies.get(
+        db,
+        data.company_id
+    )
+
 
     if not company:
+
         raise HTTPException(
             status_code=404,
             detail="Company not found"
         )
 
-    existing = db.query(Branch).filter(
-        Branch.branch_code == data.branch_code
-    ).first()
+
+
+    existing = uow.branches.first_by(
+        db,
+        branch_code=data.branch_code
+    )
+
 
     if existing:
+
         raise HTTPException(
             status_code=400,
             detail="Branch code already exists"
         )
 
-    branch = Branch(
-        branch_name=data.branch_name,
-        branch_code=data.branch_code,
-        email=data.email,
-        phone=data.phone,
-        address=data.address,
-        company_id=data.company_id
+
+
+    try:
+
+        branch = uow.branches.model(
+            **data.model_dump()
+        )
+
+
+        uow.branches.create(
+            db,
+            branch
+        )
+
+
+        uow.commit()
+
+        uow.refresh(branch)
+
+
+        return branch
+
+
+
+    except Exception as e:
+
+        uow.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Branch creation failed: {str(e)}"
+        )
+
+
+
+
+def get_all_branches(db:Session):
+
+    uow = UnitOfWork(db)
+
+    return uow.branches.get_all(db)
+
+
+
+
+def get_branch(
+    db:Session,
+    branch_id:int
+):
+
+    uow = UnitOfWork(db)
+
+    branch = uow.branches.get(
+        db,
+        branch_id
     )
 
-    db.add(branch)
-    db.commit()
-    db.refresh(branch)
-
-    return branch
-
-
-def get_all_branches(db: Session):
-    return db.query(Branch).all()
-
-
-def get_branch(db: Session, branch_id: int):
-
-    branch = db.query(Branch).filter(
-        Branch.id == branch_id
-    ).first()
 
     if not branch:
+
         raise HTTPException(
             status_code=404,
             detail="Branch not found"
         )
+
 
     return branch

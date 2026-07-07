@@ -4,7 +4,6 @@ from sqlalchemy.sql import func
 
 from database import Base
 
-
 class Department(Base):
     __tablename__ = "departments"
 
@@ -14,36 +13,25 @@ class Department(Base):
     department_code = Column(String(50), nullable=False, unique=True)
 
     description = Column(String(255), nullable=True)
-
     is_active = Column(Boolean, default=True)
 
-    # -------------------------
-    # Branch Relationship
-    # -------------------------
-    branch_id = Column(
-        Integer,
-        ForeignKey("branches.id"),
-        nullable=False
-    )
+    branch_id = Column(Integer, ForeignKey("branches.id"), nullable=False)
 
-    branch = relationship(
-        "Branch",
-        back_populates="departments"
-    )
+    branch = relationship("Branch", back_populates="departments")
 
-    # -------------------------
-    # Team Relationship
-    # -------------------------
     teams = relationship(
         "Team",
         back_populates="department",
         cascade="all, delete-orphan"
     )
 
-    created_at = Column(
-        DateTime(timezone=True),
-        server_default=func.now()
+    # 🔥 REQUIRED FIX
+    users = relationship(
+        "User",
+        back_populates="department"
     )
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     updated_at = Column(
         DateTime(timezone=True),

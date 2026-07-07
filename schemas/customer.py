@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class CustomerCreate(BaseModel):
     user_id: int
-    customer_code: str
+    customer_code: str |None = None
     company_name: str | None = None
     address: str | None = None
     city: str | None = None
@@ -14,7 +14,7 @@ class CustomerCreate(BaseModel):
 class CustomerResponse(BaseModel):
     id: int
     user_id: int
-    customer_code: str
+    customer_code: str | None = None
     company_name: str | None
     address: str | None
 

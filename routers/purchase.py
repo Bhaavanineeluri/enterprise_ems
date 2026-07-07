@@ -1,0 +1,61 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from database import get_db
+
+from schemas.purchase import (
+    PurchaseRequestCreate,
+    PurchaseRequestResponse,
+    PurchaseOrderCreate,
+    PurchaseOrderResponse,
+)
+
+from services.purchase import (
+    create_purchase_request,
+    create_purchase_order,
+    get_purchase_requests,
+    get_purchase_orders,
+)
+
+router = APIRouter(
+    prefix="/purchase",
+    tags=["Procurement"]
+)
+
+
+@router.post(
+    "/request",
+    response_model=PurchaseRequestResponse
+)
+def create_request(
+    data: PurchaseRequestCreate,
+    db: Session = Depends(get_db)
+):
+    return create_purchase_request(db, data)
+
+
+@router.get(
+    "/request",
+    response_model=list[PurchaseRequestResponse]
+)
+def list_requests(db: Session = Depends(get_db)):
+    return get_purchase_requests(db)
+
+
+@router.post(
+    "/order",
+    response_model=PurchaseOrderResponse
+)
+def create_order(
+    data: PurchaseOrderCreate,
+    db: Session = Depends(get_db)
+):
+    return create_purchase_order(db, data)
+
+
+@router.get(
+    "/order",
+    response_model=list[PurchaseOrderResponse]
+)
+def list_orders(db: Session = Depends(get_db)):
+    return get_purchase_orders(db)

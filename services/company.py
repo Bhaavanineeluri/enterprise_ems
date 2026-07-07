@@ -1,46 +1,97 @@
-from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
-from models.company import Company
 from schemas.company import CompanyCreate
 
+from core.unit_of_work.uow import UnitOfWork
 
-def create_company(db: Session, data: CompanyCreate):
 
-    existing = db.query(Company).filter(
-        Company.company_code == data.company_code
-    ).first()
+
+def create_company(
+    db: Session,
+    data: CompanyCreate
+):
+
+    uow = UnitOfWork(db)
+
+
+    existing = uow.companies.first_by(
+        db,
+        company_code=data.company_code
+    )
+
 
     if existing:
+
         raise HTTPException(
             status_code=400,
             detail="Company code already exists"
         )
 
-    company = Company(
-        company_name=data.company_name,
-        company_code=data.company_code,
-        email=data.email,
-        phone=data.phone,
-        website=data.website,
-        address=data.address
+
+    try:
+
+        company = uow.companies.model(
+            **data.model_dump()
+        )
+
+
+        uow.companies.create(
+            db,
+            company
+        )
+
+
+        uow.commit()
+
+        uow.refresh(company)
+
+
+        return company
+
+
+    except Exception as e:
+
+        uow.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Company creation failed: {str(e)}"
+        )
+
+
+
+
+def get_all_companies(
+    db: Session
+):
+
+    uow = UnitOfWork(db)
+
+    return uow.companies.get_all(db)
+
+
+
+
+def get_company(
+    db: Session,
+    company_id:int
+):
+
+    uow = UnitOfWork(db)
+
+    company = uow.companies.get(
+        db,
+        company_id
     )
 
-    db.add(company)
-    db.commit()
-    db.refresh(company)
-
-    return company
-
-
-def get_all_companies(db: Session):
-    return db.query(Company).all()
-
-
-def get_company(db: Session, company_id: int):
-    company = db.query(Company).filter(Company.id == company_id).first()
 
     if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
+
+        raise HTTPException(
+            status_code=404,
+            detail="Company not found"
+        )
+
 
     return company

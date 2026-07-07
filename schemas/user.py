@@ -4,6 +4,7 @@ from core.roles import Role
 class UserRole(str, Enum):
     ADMIN = "admin"
     EMPLOYEE = "employee"
+    MANAGER ="manager"
     CUSTOMER = "customer"
 
 class UserRegister(BaseModel):
