@@ -4,7 +4,8 @@ from sqlalchemy import (
     String,
     Boolean,
     ForeignKey,
-    DateTime
+    DateTime,
+    Text
 )
 
 from sqlalchemy.sql import func
@@ -24,6 +25,7 @@ class Document(Base):
     )
 
 
+    # Owner
     user_id = Column(
         Integer,
         ForeignKey("users.id"),
@@ -43,11 +45,42 @@ class Document(Base):
     )
 
 
+    # File Details
+
     file_path = Column(
         String(500),
         nullable=False
     )
 
+
+    file_extension = Column(
+        String(20),
+        nullable=True
+    )
+
+
+    file_size = Column(
+        Integer,
+        nullable=True
+    )
+
+
+    mime_type = Column(
+        String(100),
+        nullable=True
+    )
+
+
+    # Upload Information
+
+    uploaded_by = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False
+    )
+
+
+    # Access Control
 
     is_public = Column(
         Boolean,
@@ -55,7 +88,50 @@ class Document(Base):
     )
 
 
+    access_level = Column(
+        String(50),
+        default="PRIVATE"
+    )
+
+
+    # Metadata
+
+    description = Column(
+        Text,
+        nullable=True
+    )
+
+
+    tags = Column(
+        String(500),
+        nullable=True
+    )
+
+
+    # OCR Support
+
+    ocr_text = Column(
+        Text,
+        nullable=True
+    )
+
+
+    ocr_completed = Column(
+        Boolean,
+        default=False
+    )
+
+
+    # Timestamps
+
     created_at = Column(
         DateTime(timezone=True),
         server_default=func.now()
+    )
+
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now()
     )

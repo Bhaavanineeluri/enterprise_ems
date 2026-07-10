@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 from schemas.branch import BranchCreate, BranchResponse
-from services.branch import create_branch, get_all_branches, get_branch
+from services.branch import create_branch, get_all_branches, get_branch,delete_branch
 
 router = APIRouter(prefix="/branches", tags=["Branch"])
 
@@ -21,3 +21,13 @@ def get_all(db: Session = Depends(get_db)):
 @router.get("/{branch_id}", response_model=BranchResponse)
 def get_one(branch_id: int, db: Session = Depends(get_db)):
     return get_branch(db, branch_id)
+@router.delete("/{branch_id}")
+def delete(
+    branch_id: int,
+    db: Session = Depends(get_db)
+):
+
+    return delete_branch(
+        db,
+        branch_id
+    )

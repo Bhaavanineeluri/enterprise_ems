@@ -10,7 +10,8 @@ from schemas.goods_receipt import (
 
 from services.goods_receipt import (
     create_goods_receipt,
-    get_goods_receipts
+    get_goods_receipts,
+    get_goods_receipt
 )
 
 router = APIRouter(
@@ -37,4 +38,4 @@ def get_one(
     receipt_id: int,
     db: Session = Depends(get_db)
 ):
-    return get_goods_receipts(db, receipt_id)
+    return get_goods_receipt(db, receipt_id)

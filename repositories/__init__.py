@@ -14,9 +14,18 @@ from .purchase_request import purchase_request_repository
 from repositories.invoice import InvoiceRepository
 from repositories.payment import PaymentRepository
 from repositories.transaction import TransactionRepository
-from repositories.ledger import LedgerRepository
+from repositories.general_ledger import (
+    GeneralLedgerRepository,
+    general_ledger_repository,
+)
 from repositories.approval import approval_repository
 from repositories.workflow import workflow_repository
 from repositories.notification import notification_repository
 from repositories.document import document_repository
 from repositories.report import report_repository
+from repositories.accounts_receivable import accounts_receivable_repository
+from repositories.accounts_payable import accounts_payable_repository
+from repositories.journal_entry import JournalEntry_repository
+from repositories.notification_webhook import notification_webhook_repository
+from repositories.workflow_escalation import workflow_escalation_repository
+from repositories.workflow_sla import workflow_sla_repository

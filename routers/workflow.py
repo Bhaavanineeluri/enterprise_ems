@@ -9,7 +9,22 @@ from schemas.approval import (
     ApprovalCreate,
     ApprovalUpdate
 )
+from schemas.workflow_escalation import (
+    WorkflowEscalationCreate
+)
+from schemas.workflow_sla import (
+    WorkflowSLACreate
+)
 
+from services.workflow import (
+    create_sla,
+    get_slas
+)
+
+from services.workflow import (
+    create_escalation,
+    get_escalations
+)
 from services.workflow import (
     create_workflow,
     get_workflows,
@@ -18,10 +33,16 @@ from services.workflow import (
     get_approvals
 )
 
+from schemas.workflow_escalation import (
+    WorkflowEscalationCreate
+)
 
+from schemas.workflow_sla import (
+    WorkflowSLACreate
+)
 router = APIRouter(
     prefix="/workflow",
-    tags=["Workflow"]
+    tags=["Workflow Engine"]
 )
 
 
@@ -91,3 +112,72 @@ def list_approvals(
 ):
 
     return get_approvals(db)
+
+# =====================================================
+# ESCALATION
+# =====================================================
+
+
+@router.post("/escalation")
+def add_escalation(
+    data: WorkflowEscalationCreate,
+    db: Session = Depends(get_db)
+):
+
+    return create_escalation(
+        db,
+        data
+    )
+
+
+
+@router.get("/escalation")
+def list_escalations(
+    db: Session = Depends(get_db)
+):
+
+    return get_escalations(db)
+
+
+
+# =====================================================
+# SLA
+# =====================================================
+
+
+@router.post("/sla")
+def add_sla(
+    data: WorkflowSLACreate,
+    db: Session = Depends(get_db)
+):
+
+    return create_sla(
+        db,
+        data
+    )
+
+
+@router.get("/sla")
+def list_sla(
+    db: Session = Depends(get_db)
+):
+
+    return get_slas(db)
+@router.post("/sla")
+def add_sla(
+    data: WorkflowSLACreate,
+    db: Session = Depends(get_db)
+):
+
+    return create_sla(
+        db,
+        data
+    )
+
+
+@router.get("/sla")
+def list_sla(
+    db: Session = Depends(get_db)
+):
+
+    return get_slas(db)

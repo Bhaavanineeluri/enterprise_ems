@@ -1,9 +1,14 @@
 from fastapi import APIRouter, Depends
 
 from dependencies.auth import get_current_user
-from dependencies.permission import require_roles
+from dependencies.roles import require_roles
 from core.roles import Role
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
+from database import get_db
+from schemas.user_assignment import UserAssignment
+from services.user_assignment import assign_user
 from services.user import (
     get_my_profile,
     get_all_users,
@@ -77,3 +82,18 @@ def remove_user(
     _=Depends(require_roles(Role.SUPER_ADMIN))
 ):
     return delete_user(user_id)
+
+
+router = APIRouter(prefix="/assign", tags=["User Assignment"])
+
+
+@router.post("/")
+def assign(data: UserAssignment, db: Session = Depends(get_db)):
+    return assign_user(
+        db,
+        user_id=data.user_id,
+        company_id=data.company_id,
+        branch_id=data.branch_id,
+        department_id=data.department_id,
+        team_id=data.team_id
+    )

@@ -1,267 +1,267 @@
-from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from models.invoice import Invoice
-from models.payment import Payment
-from models.transaction import Transaction
-from models.ledger import Ledger
+from models.general_ledger import GeneralLedger
+from models.accounts_payable import AccountsPayable
+from models.accounts_receivable import AccountsReceivable
 
-from schemas.finance import (
-    InvoiceCreate,
-    PaymentCreate,
-    TransactionCreate,
-    LedgerCreate
+
+from repositories.general_ledger import (
+    general_ledger_repository
 )
 
-from core.unit_of_work import UnitOfWork
+from repositories.accounts_payable import (
+    accounts_payable_repository
+)
+
+from repositories.accounts_receivable import (
+    accounts_receivable_repository
+)
 
 
 
 # =====================================================
-# INVOICE
+# GENERAL LEDGER
 # =====================================================
 
-def create_invoice(
-    db: Session,
-    data: InvoiceCreate
-):
-
-    uow = UnitOfWork(db)
-
-
-    existing = db.query(Invoice).filter(
-        Invoice.invoice_number == data.invoice_number
-    ).first()
-
-
-    if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Invoice already exists"
-        )
-
-
-    invoice = Invoice(
-        invoice_number=data.invoice_number,
-        sales_order_id=data.sales_order_id,
-        customer_id=data.customer_id,
-        total_amount=data.total_amount
-    )
-
-
-    uow.invoices.create(
-        db,
-        invoice
-    )
-
-
-    db.commit()
-    db.refresh(invoice)
-
-
-    return invoice
-
-
-
-
-def get_invoices(
-    db: Session
-):
-
-    uow = UnitOfWork(db)
-
-    return uow.invoices.get_all(db)
-
-
-
-def get_invoice(
-    db: Session,
-    invoice_id: int
-):
-
-    uow = UnitOfWork(db)
-
-
-    invoice = uow.invoices.get(
-        db,
-        invoice_id
-    )
-
-
-    if not invoice:
-        raise HTTPException(
-            status_code=404,
-            detail="Invoice not found"
-        )
-
-
-    return invoice
-
-
-
-
-
-# =====================================================
-# PAYMENT
-# =====================================================
-
-def create_payment(
-    db: Session,
-    data: PaymentCreate
-):
-
-    uow = UnitOfWork(db)
-
-
-    existing = db.query(Payment).filter(
-        Payment.payment_number == data.payment_number
-    ).first()
-
-
-    if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Payment already exists"
-        )
-
-
-    payment = Payment(
-        payment_number=data.payment_number,
-        invoice_id=data.invoice_id,
-        customer_id=data.customer_id,
-        amount=data.amount,
-        payment_method=data.payment_method
-    )
-
-
-    uow.payments.create(
-        db,
-        payment
-    )
-
-
-    db.commit()
-    db.refresh(payment)
-
-
-    return payment
-
-
-
-
-def get_payments(
-    db: Session
-):
-
-    uow = UnitOfWork(db)
-
-    return uow.payments.get_all(db)
-
-
-
-
-
-# =====================================================
-# TRANSACTION
-# =====================================================
-
-def create_transaction(
-    db: Session,
-    data: TransactionCreate
-):
-
-    uow = UnitOfWork(db)
-
-
-    transaction = Transaction(
-        transaction_number=data.transaction_number,
-        payment_id=data.payment_id,
-        amount=data.amount,
-        transaction_type=data.transaction_type,
-        reference=data.reference
-    )
-
-
-    uow.transactions.create(
-        db,
-        transaction
-    )
-
-
-    db.commit()
-    db.refresh(transaction)
-
-
-    return transaction
-
-
-
-
-
-def get_transactions(
-    db: Session
-):
-
-    uow = UnitOfWork(db)
-
-    return uow.transactions.get_all(db)
-
-
-
-
-
-# =====================================================
-# LEDGER
-# =====================================================
 
 def create_ledger(
     db: Session,
-    data: LedgerCreate
+    data
 ):
 
-    uow = UnitOfWork(db)
-
-
-    existing = db.query(Ledger).filter(
-        Ledger.ledger_name == data.ledger_name
-    ).first()
-
-
-    if existing:
-        raise HTTPException(
-            status_code=400,
-            detail="Ledger already exists"
-        )
-
-
-    ledger = Ledger(
-        ledger_name=data.ledger_name,
-        account_type=data.account_type,
-        opening_balance=data.opening_balance,
-        current_balance=data.opening_balance,
-        description=data.description
+    ledger = GeneralLedger(
+        **data.model_dump()
     )
 
-
-    uow.ledgers.create(
+    return general_ledger_repository.create(
         db,
         ledger
     )
-
-
-    db.commit()
-    db.refresh(ledger)
-
-
-    return ledger
-
-
 
 
 def get_ledgers(
     db: Session
 ):
 
-    uow = UnitOfWork(db)
+    return general_ledger_repository.get_all(
+        db
+    )
 
-    return uow.ledgers.get_all(db)
+
+
+# =====================================================
+# ACCOUNTS PAYABLE
+# =====================================================
+
+
+def create_payable(
+    db: Session,
+    data
+):
+
+    payable = AccountsPayable(
+        **data.model_dump()
+    )
+
+    return accounts_payable_repository.create(
+        db,
+        payable
+    )
+
+
+def get_payables(
+    db: Session
+):
+
+    return accounts_payable_repository.get_all(
+        db
+    )
+
+
+
+# =====================================================
+# ACCOUNTS RECEIVABLE
+# =====================================================
+
+
+def create_receivable(
+    db: Session,
+    data
+):
+
+    receivable = AccountsReceivable(
+        **data.model_dump()
+    )
+
+
+    return accounts_receivable_repository.create(
+        db,
+        receivable
+    )
+
+
+def get_receivables(
+    db: Session
+):
+
+    return accounts_receivable_repository.get_all(
+        db
+    )
+from models.general_ledger import GeneralLedger
+from models.accounts_payable import AccountsPayable
+from models.accounts_receivable import AccountsReceivable
+
+
+
+# =====================================================
+# FINANCIAL REPORTS
+# =====================================================
+
+
+def trial_balance(
+    db: Session
+):
+
+    ledgers = (
+        db.query(GeneralLedger)
+        .all()
+    )
+
+
+    total_debit = 0
+    total_credit = 0
+
+
+    accounts = []
+
+
+    for ledger in ledgers:
+
+        balance = ledger.balance or 0
+
+
+        if balance >= 0:
+
+            debit = balance
+            credit = 0
+
+        else:
+
+            debit = 0
+            credit = abs(balance)
+
+
+        total_debit += debit
+        total_credit += credit
+
+
+        accounts.append(
+            {
+                "account": ledger.account_name,
+                "debit": debit,
+                "credit": credit
+            }
+        )
+
+
+    return {
+        "accounts": accounts,
+        "total_debit": total_debit,
+        "total_credit": total_credit
+    }
+
+
+
+def profit_loss(
+    db: Session
+):
+
+    ledgers = (
+        db.query(GeneralLedger)
+        .all()
+    )
+
+
+    revenue = 0
+    expenses = 0
+
+
+    for ledger in ledgers:
+
+        if ledger.account_type == "REVENUE":
+
+            revenue += ledger.balance
+
+
+        elif ledger.account_type == "EXPENSE":
+
+            expenses += ledger.balance
+
+
+
+    return {
+
+        "revenue": revenue,
+
+        "expenses": expenses,
+
+        "profit": revenue - expenses
+    }
+
+
+
+def balance_sheet(
+    db: Session
+):
+
+    assets = 0
+    liabilities = 0
+
+
+    # Accounts Receivable = Asset
+
+    receivables = (
+        db.query(
+            AccountsReceivable
+        )
+        .all()
+    )
+
+
+    for item in receivables:
+
+        assets += (
+            item.amount -
+            item.received_amount
+        )
+
+
+
+    # Accounts Payable = Liability
+
+    payables = (
+        db.query(
+            AccountsPayable
+        )
+        .all()
+    )
+
+
+    for item in payables:
+
+        liabilities += (
+            item.amount -
+            item.paid_amount
+        )
+
+
+
+    return {
+
+        "assets": assets,
+
+        "liabilities": liabilities,
+
+        "equity": assets - liabilities
+
+    }

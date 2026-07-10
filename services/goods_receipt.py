@@ -148,3 +148,24 @@ def get_goods_receipts(
     uow = UnitOfWork(db)
 
     return uow.goods_receipts.get_all(db)
+
+
+
+def get_goods_receipt(
+    db: Session,
+    receipt_id: int
+):
+    uow = UnitOfWork(db)
+
+    receipt = uow.goods_receipts.get(
+        db,
+        receipt_id
+    )
+
+    if not receipt:
+        raise HTTPException(
+            status_code=404,
+            detail="Goods Receipt not found"
+        )
+
+    return receipt

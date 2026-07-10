@@ -44,10 +44,7 @@ class Approval(Base):
         default="Pending"
     )
 
-    level = Column(
-        Integer,
-        default=1
-    )
+    
 
     remarks = Column(
         String(255)
@@ -63,3 +60,9 @@ class Approval(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
+    approval_level = Column(
+    Integer,
+    default=1
+    )
+    
+   

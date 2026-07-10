@@ -111,3 +111,48 @@ def get_branch(
 
 
     return branch
+# =====================================================
+# DELETE BRANCH
+# =====================================================
+
+def delete_branch(
+    db: Session,
+    branch_id: int
+):
+
+    uow = UnitOfWork(db)
+
+    branch = uow.branches.get(
+        db,
+        branch_id
+    )
+
+    if not branch:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Branch not found"
+        )
+
+    try:
+
+        uow.branches.delete(
+            db,
+            branch
+        )
+
+        uow.commit()
+
+        return {
+            "success": True,
+            "message": "Branch deleted successfully"
+        }
+
+    except Exception as e:
+
+        uow.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )

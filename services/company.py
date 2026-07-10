@@ -94,4 +94,47 @@ def get_company(
         )
 
 
-    return company
+    return company# =====================================================
+# DELETE COMPANY
+# =====================================================
+
+def delete_company(
+    db: Session,
+    company_id: int
+):
+
+    uow = UnitOfWork(db)
+
+    company = uow.companies.get(
+        db,
+        company_id
+    )
+
+    if not company:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Company not found"
+        )
+
+    try:
+
+        uow.companies.delete(
+            db,
+            company
+        )
+
+        uow.commit()
+
+        return {
+            "message": "Company deleted successfully"
+        }
+
+    except Exception as e:
+
+        uow.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )

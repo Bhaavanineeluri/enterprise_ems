@@ -1,18 +1,26 @@
 from pydantic import BaseModel, ConfigDict
+from typing import Optional
+
 
 
 class ApprovalCreate(BaseModel):
 
     workflow_id: int
-    requested_by: int
-    level: int = 1
+
+    request_id: int
+
+    approver_id: int
+
+    approval_level: int = 1
+
 
 
 class ApprovalUpdate(BaseModel):
 
     status: str
-    approved_by: int | None = None
-    remarks: str | None = None
+
+    remarks: Optional[str] = None
+
 
 
 class ApprovalResponse(BaseModel):
@@ -21,10 +29,17 @@ class ApprovalResponse(BaseModel):
         from_attributes=True
     )
 
+
     id: int
+
     workflow_id: int
-    requested_by: int
-    approved_by: int | None
+
+    request_id: int
+
+    approver_id: int
+
+    approval_level: int
+
     status: str
-    level: int
-    remarks: str | None
+
+    remarks: Optional[str]

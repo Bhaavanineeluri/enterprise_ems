@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 
 class CustomerCreate(BaseModel):
@@ -20,3 +21,13 @@ class CustomerResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class CustomerUpdate(BaseModel):
+    customer_code: Optional[str] = None
+    company_name: Optional[str] = None
+
+    address: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    country: Optional[str] = None

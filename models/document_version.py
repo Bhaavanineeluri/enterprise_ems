@@ -3,7 +3,8 @@ from sqlalchemy import (
     Integer,
     String,
     ForeignKey,
-    DateTime
+    DateTime,
+    Text
 )
 
 from sqlalchemy.sql import func
@@ -46,6 +47,18 @@ class DocumentVersion(Base):
         Integer,
         ForeignKey("users.id"),
         nullable=False
+    )
+
+
+    change_notes = Column(
+        Text,
+        nullable=True
+    )
+
+
+    status = Column(
+        String(50),
+        default="ACTIVE"
     )
 
 

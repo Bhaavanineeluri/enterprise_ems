@@ -14,7 +14,6 @@ from schemas.user import (
 
 from core.unit_of_work.uow import UnitOfWork
 
-from services.login_history import create_login_history
 from services.otp import create_otp, verify_otp
 
 from utils.password import hash_password, verify_password
@@ -237,12 +236,7 @@ def login_user(
 
 
 
-    create_login_history(
-        db=db,
-        user_id=db_user.id,
-        ip_address=ip_address,
-        status="Success"
-    )
+  
 
 
     otp = create_otp(

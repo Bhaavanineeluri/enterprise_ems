@@ -1,57 +1,30 @@
 from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer
-from jose import jwt, JWTError
-from sqlalchemy.orm import Session
 
-from database import SessionLocal
-from models.user import User
-from utils.jwt_handler import SECRET_KEY, ALGORITHM
-
-security = HTTPBearer()
+from dependencies.auth import get_current_user
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+class RoleChecker:
 
+    def __init__(self, roles: list):
 
-def get_current_user(
-    credentials=Depends(security),
-    db: Session = Depends(get_db)
-):
+        self.roles = roles
 
-    token = credentials.credentials
+    def __call__(
 
-    try:
-        payload = jwt.decode(
-            token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
-        )
+        self,
 
-        user_email = payload.get("sub")
+        current_user=Depends(get_current_user)
 
-        if not user_email:
+    ):
+
+        if current_user.role not in self.roles:
+
             raise HTTPException(
-                status_code=401,
-                detail="Invalid token payload"
+
+                status_code=403,
+
+                detail="Permission denied"
+
             )
 
-        user = db.query(User).filter(User.email == user_email).first()
-
-        if not user:
-            raise HTTPException(
-                status_code=404,
-                detail="User not found"
-            )
-
-        return user
-
-    except JWTError:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid token"
-        )
+        return current_user

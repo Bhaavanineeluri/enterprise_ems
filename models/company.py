@@ -4,6 +4,7 @@ from sqlalchemy.sql import func
 
 from database import Base
 
+
 class Company(Base):
     __tablename__ = "companies"
 
@@ -19,8 +20,83 @@ class Company(Base):
 
     is_active = Column(Boolean, default=True)
 
-    users = relationship("User", back_populates="company")
-    branches = relationship("Branch", back_populates="company", cascade="all, delete-orphan")
+    # ==========================
+    # Existing Relationships
+    # ==========================
 
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    users = relationship(
+        "User",
+        back_populates="company"
+    )
+
+    branches = relationship(
+        "Branch",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    # ==========================
+    # Company Module
+    # ==========================
+
+    company_addresses = relationship(
+        "CompanyAddress",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    company_contacts = relationship(
+        "CompanyContact",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    company_bank_accounts = relationship(
+        "CompanyBankAccount",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    company_taxes = relationship(
+        "CompanyTax",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    company_licenses = relationship(
+        "CompanyLicense",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    company_policies = relationship(
+        "CompanyPolicy",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    company_holidays = relationship(
+        "CompanyHoliday",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    company_settings = relationship(
+        "CompanySetting",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    fiscal_years = relationship(
+        "CompanyFiscalYear",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    working_hours = relationship(
+        "CompanyWorkingHours",
+        back_populates="company",
+        cascade="all, delete-orphan"
+    )
+
+    # Optional (only if you created these models)

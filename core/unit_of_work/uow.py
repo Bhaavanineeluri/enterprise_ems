@@ -20,7 +20,7 @@ from repositories.goods_receipt import goods_receipt_repository
 from repositories.invoice import InvoiceRepository
 from repositories.payment import PaymentRepository
 from repositories.transaction import TransactionRepository
-from repositories.ledger import LedgerRepository
+from repositories.general_ledger import GeneralLedgerRepository
 class UnitOfWork:
 
     def __init__(self, db: Session):
@@ -55,7 +55,7 @@ class UnitOfWork:
         self.invoices = InvoiceRepository()
         self.payments = PaymentRepository()
         self.transactions = TransactionRepository()
-        self.ledgers = LedgerRepository()
+        self.ledgers = GeneralLedgerRepository()
 
     def commit(self):
 

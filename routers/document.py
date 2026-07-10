@@ -1,15 +1,23 @@
-from fastapi import APIRouter, Depends
+import os
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    UploadFile,
+    File,
+    Form
+)
 
 from sqlalchemy.orm import Session
 
 from database import get_db
 
+from models.document import Document
 
 from schemas.document import (
     DocumentCreate,
     DocumentVersionCreate
 )
-
 
 from services.document import (
     create_document,
@@ -20,13 +28,23 @@ from services.document import (
 )
 
 
-
 router = APIRouter(
     prefix="/documents",
     tags=["Documents"]
 )
 
 
+UPLOAD_DIR = "uploads/documents"
+
+os.makedirs(
+    UPLOAD_DIR,
+    exist_ok=True
+)
+
+
+# ===============================
+# CREATE DOCUMENT
+# ===============================
 
 @router.post("/")
 def add_document(
@@ -40,6 +58,9 @@ def add_document(
     )
 
 
+# ===============================
+# GET ALL DOCUMENTS
+# ===============================
 
 @router.get("/")
 def list_documents(
@@ -49,10 +70,13 @@ def list_documents(
     return get_documents(db)
 
 
+# ===============================
+# GET SINGLE DOCUMENT
+# ===============================
 
 @router.get("/{document_id}")
 def fetch_document(
-    document_id:int,
+    document_id: int,
     db: Session = Depends(get_db)
 ):
 
@@ -62,6 +86,9 @@ def fetch_document(
     )
 
 
+# ===============================
+# CREATE DOCUMENT VERSION
+# ===============================
 
 @router.post("/versions")
 def add_version(
@@ -75,10 +102,13 @@ def add_version(
     )
 
 
+# ===============================
+# GET DOCUMENT VERSIONS
+# ===============================
 
 @router.get("/{document_id}/versions")
 def list_versions(
-    document_id:int,
+    document_id: int,
     db: Session = Depends(get_db)
 ):
 
@@ -86,3 +116,95 @@ def list_versions(
         db,
         document_id
     )
+
+
+# ===============================
+# UPLOAD DOCUMENT
+# ===============================
+
+@router.post("/upload")
+def upload_document(
+
+    user_id: int = Form(...),
+
+    document_name: str = Form(...),
+
+    document_type: str = Form(...),
+
+    description: str = Form(None),
+
+    tags: str = Form(None),
+
+    file: UploadFile = File(...),
+
+    db: Session = Depends(get_db)
+
+):
+
+    os.makedirs(
+        UPLOAD_DIR,
+        exist_ok=True
+    )
+
+
+    file_location = os.path.join(
+        UPLOAD_DIR,
+        file.filename
+    )
+
+
+    with open(
+        file_location,
+        "wb"
+    ) as buffer:
+
+        buffer.write(
+            file.file.read()
+        )
+
+
+    file_size = os.path.getsize(
+        file_location
+    )
+
+
+    extension = (
+        file.filename.split(".")[-1]
+        if "." in file.filename
+        else None
+    )
+
+
+    document = Document(
+
+        user_id=user_id,
+
+        uploaded_by=user_id,
+
+        document_name=document_name,
+
+        document_type=document_type,
+
+        file_path=file_location,
+
+        description=description,
+
+        tags=tags,
+
+        file_extension=extension,
+
+        file_size=file_size,
+
+        mime_type=file.content_type
+
+    )
+
+
+    db.add(document)
+
+    db.commit()
+
+    db.refresh(document)
+
+
+    return document

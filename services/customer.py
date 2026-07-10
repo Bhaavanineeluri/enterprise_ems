@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from core.unit_of_work.uow import UnitOfWork
 from schemas.customer import CustomerCreate
 
+from models.customer import Customer
+from schemas.customer import CustomerUpdate
 
 
 def create_customer(
@@ -94,3 +96,90 @@ def get_customer(
 
 
     return customer
+
+
+
+
+def get_all_customers(db: Session):
+    customers = db.query(Customer).all()
+
+    if not customers:
+        raise HTTPException(
+            status_code=404,
+            detail="No customers found."
+        )
+
+    return customers
+
+
+def update_customer(
+    customer_id: int,
+    customer: CustomerUpdate,
+    db: Session
+):
+    db_customer = (
+        db.query(Customer)
+        .filter(Customer.id == customer_id)
+        .first()
+    )
+
+    if not db_customer:
+        raise HTTPException(
+            status_code=404,
+            detail="Customer not found"
+        )
+
+    update_data = customer.model_dump(exclude_unset=True)
+
+    for key, value in update_data.items():
+        setattr(db_customer, key, value)
+
+    db.commit()
+    db.refresh(db_customer)
+
+    return db_customer
+# =====================================================
+# DELETE CUSTOMER
+# =====================================================
+
+def delete_customer(
+    db: Session,
+    customer_id: int
+):
+
+    uow = UnitOfWork(db)
+
+    customer = uow.customers.get(
+        db,
+        customer_id
+    )
+
+    if not customer:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Customer not found"
+        )
+
+    try:
+
+        uow.customers.delete(
+            db,
+            customer
+        )
+
+        uow.commit()
+
+        return {
+            "success": True,
+            "message": "Customer deleted successfully"
+        }
+
+    except Exception as e:
+
+        uow.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )

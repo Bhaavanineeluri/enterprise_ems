@@ -1,18 +1,22 @@
 from utils.jwt_handler import create_access_token, create_refresh_token
 
 
+
+
 def generate_tokens(user):
 
     access_token = create_access_token(
         {
             "sub": user.email,
-            "role": user.role
+            "role": user.role,
+            "company_id": user.company_id
         }
     )
 
     refresh_token = create_refresh_token(
         {
-            "sub": user.email
+            "sub": user.email,
+            "company_id": user.company_id
         }
     )
 

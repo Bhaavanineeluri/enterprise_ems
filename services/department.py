@@ -111,3 +111,48 @@ def get_department(
 
 
     return department
+# =====================================================
+# DELETE DEPARTMENT
+# =====================================================
+
+def delete_department(
+    db: Session,
+    department_id: int
+):
+
+    uow = UnitOfWork(db)
+
+    department = uow.departments.get(
+        db,
+        department_id
+    )
+
+    if not department:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Department not found"
+        )
+
+    try:
+
+        uow.departments.delete(
+            db,
+            department
+        )
+
+        uow.commit()
+
+        return {
+            "success": True,
+            "message": "Department deleted successfully"
+        }
+
+    except Exception as e:
+
+        uow.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
