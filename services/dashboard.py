@@ -1,57 +1,33 @@
+from datetime import date, datetime
+
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
 from models.user import User
-from models.employee import Employee
-from models.customer import Customer
-from models.vendor import Vendor
-from sqlalchemy import func
-from datetime import datetime
-
-from models.customer import Customer
-from datetime import datetime
-from sqlalchemy import func
-from sqlalchemy.orm import Session
-
-from models.sales_order import SalesOrder
-
-from sqlalchemy.orm import Session
-
-from models.inventory import Inventory
-
-from sqlalchemy.orm import Session
-from models.sales_order import SalesOrder
-from models.inventory import Inventory
 from models.company import Company
 from models.branch import Branch
 from models.department import Department
-from sqlalchemy import func
-from models.employee import Employee
-from models.customer import Customer
-from models.product import Product
 from models.team import Team
-from models.product import Product
-from models.inventory import Inventory
-from models.purchase_order import PurchaseOrder
-from models.sales_order import SalesOrder
-from models.invoice import Invoice
-from models.payment import Payment
-from datetime import date
-from datetime import date
-from sqlalchemy import func
-from sqlalchemy.orm import Session
 
 from models.employee import Employee
 from models.attendance import Attendance
 from models.leave import Leave
+
+from models.customer import Customer
+from models.vendor import Vendor
+
+from models.product import Product
 from models.inventory import Inventory
+
+from models.purchase_order import PurchaseOrder
 from models.sales_order import SalesOrder
 from models.shipment import Shipment
+
+from models.invoice import Invoice
 from models.payment import Payment
+
 from models.approval import Approval
 from models.notification import Notification
-from datetime import datetime
-from sqlalchemy import func
-from models.customer import Customer
 def executive_dashboard(db: Session):
 
     return {

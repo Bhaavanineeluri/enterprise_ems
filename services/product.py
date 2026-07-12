@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from core.unit_of_work.uow import UnitOfWork
 from schemas.product import ProductCreate
 
+from models.product import Product
 
 # ---------------------------------
 # CREATE PRODUCT
@@ -99,6 +100,36 @@ def get_product(
         )
 
     return product
+
+
+
+def update_product(
+    db,
+    product_id,
+    data,
+    current_user
+):
+    product = (
+        db.query(Product)
+        .filter(Product.id == product_id)
+        .first()
+    )
+
+    if not product:
+        raise HTTPException(
+            status_code=404,
+            detail="Product not found"
+        )
+
+    for key, value in data.model_dump().items():
+        setattr(product, key, value)
+
+    db.commit()
+    db.refresh(product)
+
+    return product
+
+
 # =====================================================
 # DELETE PRODUCT
 # =====================================================

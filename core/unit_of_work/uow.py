@@ -16,7 +16,9 @@ from repositories.inventory import inventory_repository
 from repositories.purchase_request import purchase_request_repository
 from repositories.purchase_order import purchase_order_repository
 from repositories.goods_receipt import goods_receipt_repository
-
+from repositories.lead import (
+    lead_repository
+)
 from repositories.invoice import InvoiceRepository
 from repositories.payment import PaymentRepository
 from repositories.transaction import TransactionRepository
@@ -32,7 +34,7 @@ class UnitOfWork:
         self.users = user_repository
         self.customers = customer_repository
         self.employees = employee_repository
-
+        self.leads = lead_repository
 
         # Organization
         self.companies = company_repository

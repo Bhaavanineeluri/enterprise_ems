@@ -32,7 +32,7 @@ class User(Base):
     company_id = Column(
         Integer,
         ForeignKey("companies.id"),
-        nullable=False
+        nullable=True
     )
 
     branch_id = Column(
@@ -51,6 +51,12 @@ class User(Base):
     )
 
     # Relationships
+    preferences = relationship(
+    "UserPreference",
+    back_populates="user",
+    uselist=False,
+    cascade="all, delete-orphan"
+    )
     company = relationship(
         "Company",
         back_populates="users"

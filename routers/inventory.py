@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 
+from dependencies.auth import get_current_user
+from dependencies.permissions import require_permission
+
 from schemas.inventory import (
     InventoryUpdate,
     InventoryResponse,
@@ -32,7 +35,11 @@ router = APIRouter(
 
 @router.post(
     "/",
-    response_model=InventoryResponse
+    response_model=InventoryResponse,
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("inventory", "update"))
+    ]
 )
 def update(
     data: InventoryUpdate,
@@ -50,7 +57,11 @@ def update(
 
 @router.get(
     "/",
-    response_model=list[InventoryResponse]
+    response_model=list[InventoryResponse],
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("inventory", "view"))
+    ]
 )
 def list_all(
     db: Session = Depends(get_db)
@@ -64,7 +75,11 @@ def list_all(
 
 @router.post(
     "/stock-adjustment",
-    response_model=StockAdjustmentResponse
+    response_model=StockAdjustmentResponse,
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("inventory", "update"))
+    ]
 )
 def adjust_stock(
     data: StockAdjustmentRequest,
@@ -82,7 +97,11 @@ def adjust_stock(
 
 @router.get(
     "/product/{product_id}",
-    response_model=InventoryResponse
+    response_model=InventoryResponse,
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("inventory", "view"))
+    ]
 )
 def inventory_by_product(
     product_id: int,
@@ -100,7 +119,11 @@ def inventory_by_product(
 
 @router.get(
     "/low-stock",
-    response_model=list[InventoryResponse]
+    response_model=list[InventoryResponse],
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("inventory", "view"))
+    ]
 )
 def low_stock(
     threshold: int = 10,
@@ -118,7 +141,11 @@ def low_stock(
 
 @router.get(
     "/out-of-stock",
-    response_model=list[InventoryResponse]
+    response_model=list[InventoryResponse],
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("inventory", "view"))
+    ]
 )
 def out_of_stock(
     db: Session = Depends(get_db)
@@ -131,7 +158,11 @@ def out_of_stock(
 # =====================================================
 
 @router.get(
-    "/history/{inventory_id}"
+    "/history/{inventory_id}",
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("inventory", "view"))
+    ]
 )
 def adjustment_history(
     inventory_id: int,

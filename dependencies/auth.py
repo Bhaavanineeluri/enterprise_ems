@@ -6,6 +6,7 @@ from database import get_db
 from models.user import User
 from utils.jwt_handler import verify_access_token
 
+
 security = HTTPBearer()
 
 
@@ -18,33 +19,26 @@ def get_current_user(
 
     payload = verify_access_token(token)
 
-    # -------------------------
-    # TOKEN VALIDATION
-    # -------------------------
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token"
         )
 
-    # -------------------------
-    # EXTRACT TOKEN DATA
-    # -------------------------
-    email = payload.get("sub")
-    company_id = payload.get("company_id")
 
-    if not email or company_id is None:
+    email = payload.get("sub")
+
+    if not email:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload"
         )
 
-    # -------------------------
-    # FETCH USER
-    # -------------------------
+
     user = db.query(User).filter(
         User.email == email
     ).first()
+
 
     if not user:
         raise HTTPException(
@@ -52,13 +46,17 @@ def get_current_user(
             detail="User not found"
         )
 
-    # -------------------------
-    # COMPANY VALIDATION
-    # -------------------------
-    if user.company_id != company_id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Company validation failed"
-        )
+
+    # Only validate company if user has company assigned
+    token_company_id = payload.get("company_id")
+
+    if user.company_id and token_company_id:
+
+        if user.company_id != token_company_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Company validation failed"
+            )
+
 
     return user

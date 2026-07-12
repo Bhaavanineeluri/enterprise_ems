@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 
+from dependencies.auth import get_current_user
+from dependencies.permissions import require_permission
+
 from schemas.purchase import (
     PurchaseRequestCreate,
     PurchaseRequestResponse,
@@ -25,7 +28,11 @@ router = APIRouter(
 
 @router.post(
     "/request",
-    response_model=PurchaseRequestResponse
+    response_model=PurchaseRequestResponse,
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("purchase", "create"))
+    ]
 )
 def create_request(
     data: PurchaseRequestCreate,
@@ -36,15 +43,25 @@ def create_request(
 
 @router.get(
     "/request",
-    response_model=list[PurchaseRequestResponse]
+    response_model=list[PurchaseRequestResponse],
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("purchase", "view"))
+    ]
 )
-def list_requests(db: Session = Depends(get_db)):
+def list_requests(
+    db: Session = Depends(get_db)
+):
     return get_purchase_requests(db)
 
 
 @router.post(
     "/order",
-    response_model=PurchaseOrderResponse
+    response_model=PurchaseOrderResponse,
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("purchase", "create"))
+    ]
 )
 def create_order(
     data: PurchaseOrderCreate,
@@ -55,7 +72,13 @@ def create_order(
 
 @router.get(
     "/order",
-    response_model=list[PurchaseOrderResponse]
+    response_model=list[PurchaseOrderResponse],
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("purchase", "view"))
+    ]
 )
-def list_orders(db: Session = Depends(get_db)):
+def list_orders(
+    db: Session = Depends(get_db)
+):
     return get_purchase_orders(db)

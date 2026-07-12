@@ -202,13 +202,6 @@ def login_user(
 
     if not db_user:
 
-        create_login_history(
-            db=db,
-            user_id=None,
-            ip_address=ip_address,
-            status="Failed"
-        )
-
         raise HTTPException(
             status_code=401,
             detail="Invalid email or password"
@@ -221,12 +214,7 @@ def login_user(
         db_user.password
     ):
 
-        create_login_history(
-            db=db,
-            user_id=db_user.id,
-            ip_address=ip_address,
-            status="Failed"
-        )
+        
 
 
         raise HTTPException(

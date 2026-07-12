@@ -94,7 +94,8 @@ def get_company(
         )
 
 
-    return company# =====================================================
+    return company
+# =====================================================
 # DELETE COMPANY
 # =====================================================
 
@@ -138,3 +139,69 @@ def delete_company(
             status_code=500,
             detail=str(e)
         )
+# =====================================================
+# COMPANY HIERARCHY
+# =====================================================
+
+def get_company_hierarchy(
+    db: Session,
+    company_id: int
+):
+
+    uow = UnitOfWork(db)
+
+    company = uow.companies.get(
+        db,
+        company_id
+    )
+
+    if not company:
+        raise HTTPException(
+            status_code=404,
+            detail="Company not found"
+        )
+
+    hierarchy = {
+        "company": {
+            "id": company.id,
+            "name": company.company_name,
+            "code": company.company_code,
+            "branches": []
+        }
+    }
+
+    for branch in company.branches:
+
+        branch_data = {
+            "id": branch.id,
+            "name": branch.branch_name,
+            "code": branch.branch_code,
+            "departments": []
+        }
+
+        for department in branch.departments:
+
+            department_data = {
+                "id": department.id,
+                "name": department.department_name,
+                "code": department.department_code,
+                "teams": []
+            }
+
+            for team in department.teams:
+
+                department_data["teams"].append({
+                    "id": team.id,
+                    "name": team.team_name,
+                    "code": team.team_code
+                })
+
+            branch_data["departments"].append(
+                department_data
+            )
+
+        hierarchy["company"]["branches"].append(
+            branch_data
+        )
+
+    return hierarchy

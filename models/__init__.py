@@ -113,3 +113,4 @@ from .accounts_receivable import AccountsReceivable
 from .journal_entry import JournalEntry
 from .accounts_payable import AccountsPayable
 from .notification_webhook import NotificationWebhook
+from .lead import Lead

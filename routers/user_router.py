@@ -1,14 +1,21 @@
 from fastapi import APIRouter, Depends
-
-from dependencies.auth import get_current_user
-from dependencies.roles import require_roles
-from core.roles import Role
-from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from database import get_db
-from schemas.user_assignment import UserAssignment
-from services.user_assignment import assign_user
+
+from dependencies.auth import get_current_user
+from dependencies.permissions import require_permission
+
+from schemas.user import (
+    UserResponse,
+    UserRoleUpdate
+)
+
+from schemas.user_preference import (
+    UserPreferenceUpdate,
+    UserPreferenceResponse
+)
+
 from services.user import (
     get_my_profile,
     get_all_users,
@@ -16,9 +23,9 @@ from services.user import (
     delete_user
 )
 
-from schemas.user import (
-    UserResponse,
-    UserRoleUpdate
+from services.user_preference import (
+    get_my_preferences,
+    update_my_preferences
 )
 
 router = APIRouter(
@@ -32,7 +39,11 @@ router = APIRouter(
 # -----------------------------
 @router.get(
     "/profile",
-    response_model=UserResponse
+    response_model=UserResponse,
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("user", "view"))
+    ]
 )
 def profile(
     current_user=Depends(get_current_user)
@@ -45,15 +56,13 @@ def profile(
 # -----------------------------
 @router.get(
     "/all",
-    response_model=list[UserResponse]
+    response_model=list[UserResponse],
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("user", "view"))
+    ]
 )
-def all_users(
-    _=Depends(require_roles(
-        Role.ADMIN,
-        Role.MANAGER,
-        Role.SUPER_ADMIN
-    ))
-):
+def all_users():
     return get_all_users()
 
 
@@ -61,39 +70,77 @@ def all_users(
 # Update Role
 # -----------------------------
 @router.put(
-    "/role/{user_id}"
+    "/role/{user_id}",
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("user", "update_role"))
+    ]
 )
 def change_role(
     user_id: int,
-    role_data: UserRoleUpdate,
-    _=Depends(require_roles(Role.SUPER_ADMIN))
+    role_data: UserRoleUpdate
 ):
-    return update_user_role(user_id, role_data)
+    return update_user_role(
+        user_id,
+        role_data
+    )
 
 
 # -----------------------------
 # Delete User
 # -----------------------------
 @router.delete(
-    "/{user_id}"
+    "/{user_id}",
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("user", "delete"))
+    ]
 )
 def remove_user(
-    user_id: int,
-    _=Depends(require_roles(Role.SUPER_ADMIN))
+    user_id: int
 ):
     return delete_user(user_id)
 
 
-router = APIRouter(prefix="/assign", tags=["User Assignment"])
-
-
-@router.post("/")
-def assign(data: UserAssignment, db: Session = Depends(get_db)):
-    return assign_user(
+# -----------------------------
+# My Preferences
+# -----------------------------
+@router.get(
+    "/me/preferences",
+    response_model=UserPreferenceResponse,
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("user_preference", "view"))
+    ]
+)
+def my_preferences(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return get_my_preferences(
         db,
-        user_id=data.user_id,
-        company_id=data.company_id,
-        branch_id=data.branch_id,
-        department_id=data.department_id,
-        team_id=data.team_id
+        current_user
+    )
+
+
+# -----------------------------
+# Update My Preferences
+# -----------------------------
+@router.put(
+    "/me/preferences",
+    response_model=UserPreferenceResponse,
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("user_preference", "update"))
+    ]
+)
+def update_preferences(
+    data: UserPreferenceUpdate,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    return update_my_preferences(
+        db,
+        current_user,
+        data
     )

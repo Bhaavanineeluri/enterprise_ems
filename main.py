@@ -13,6 +13,7 @@ from middleware.security import SecurityHeadersMiddleware
 
 # ---------------- AUTH / CORE ----------------
 from routers.auth import router as auth_router
+from routers.user_assignment import router as user_assignment_router
 
 
 
@@ -95,26 +96,25 @@ app.add_middleware(
 
 # ---------------- ROUTER REGISTRATION ----------------
 
+# ---------------- ROUTER REGISTRATION ----------------
+
+
+# ================= AUTH / CORE =================
+
 app.include_router(
     auth_router,
     prefix=API_PREFIX
 )
+
 app.include_router(
-    finance_router,
+    user_assignment_router,
     prefix=API_PREFIX
 )
-
 
 app.include_router(
     user_router,
     prefix=API_PREFIX
 )
-
-app.include_router(
-    employee_router,
-    prefix=API_PREFIX
-)
-
 
 app.include_router(
     company_router,
@@ -136,9 +136,10 @@ app.include_router(
     prefix=API_PREFIX
 )
 
-
-
-
+app.include_router(
+    finance_router,
+    prefix=API_PREFIX
+)
 
 app.include_router(
     customer_router,
@@ -160,7 +161,6 @@ app.include_router(
     prefix=API_PREFIX
 )
 
-
 app.include_router(
     purchase_router,
     prefix=API_PREFIX
@@ -171,6 +171,7 @@ app.include_router(
     prefix=API_PREFIX
 )
 
+
 app.include_router(
     sales_router,
     prefix=API_PREFIX
@@ -180,12 +181,6 @@ app.include_router(
     shipping_router,
     prefix=API_PREFIX
 )
-
-app.include_router(
-    finance_router,
-    prefix=API_PREFIX
-)
-
 
 
 app.include_router(
@@ -224,12 +219,12 @@ app.include_router(
 )
 
 
+# ================= SYSTEM =================
+
 app.include_router(
     health_router,
     prefix=API_PREFIX
 )
-
-
 
 # ---------------- HEALTH CHECK ----------------
 

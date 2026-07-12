@@ -2,14 +2,30 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from database import get_db
+
+from dependencies.auth import get_current_user
+from dependencies.permissions import require_permission
+
 from schemas.user_assignment import UserAssignment
 from services.user_assignment import assign_user
 
-router = APIRouter(prefix="/assign", tags=["User Assignment"])
+router = APIRouter(
+    prefix="/assign",
+    tags=["User Assignment"]
+)
 
 
-@router.post("/")
-def assign(data: UserAssignment, db: Session = Depends(get_db)):
+@router.post(
+    "/",
+    dependencies=[
+        Depends(get_current_user),
+        Depends(require_permission("user_assignment", "create"))
+    ]
+)
+def assign(
+    data: UserAssignment,
+    db: Session = Depends(get_db)
+):
     return assign_user(
         db,
         user_id=data.user_id,
