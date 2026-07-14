@@ -40,7 +40,7 @@ from routers.goods_receipt import router as goods_receipt_router
 from routers.sales import router as sales_router
 from routers.shipping import router as shipping_router
 
-from routers.tenant import router as tenant_router
+
 
 # ---------------- ENTERPRISE FEATURES ----------------
 from routers.workflow import router as workflow_router
@@ -115,6 +115,11 @@ app.include_router(
     user_router,
     prefix=API_PREFIX
 )
+app.include_router(
+    employee_router,
+    prefix=API_PREFIX
+)
+
 
 app.include_router(
     company_router,
