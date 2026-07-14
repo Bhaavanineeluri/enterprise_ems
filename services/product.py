@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-
+from dependencies.auth import get_current_user
 from core.unit_of_work.uow import UnitOfWork
 from schemas.product import ProductCreate
-
+from core.roles import Role
 from models.product import Product
 
 # ---------------------------------
@@ -67,14 +67,15 @@ def get_products(
     db: Session,
     current_user
 ):
-
     uow = UnitOfWork(db)
+
+    if current_user.role == Role.SUPER_ADMIN.value:
+        return uow.products.get_all(db)
 
     return uow.products.all_by(
         db,
         company_id=current_user.company_id
     )
-
 
 # ---------------------------------
 # GET SINGLE PRODUCT
@@ -87,11 +88,17 @@ def get_product(
 
     uow = UnitOfWork(db)
 
-    product = uow.products.first_by(
-        db,
-        id=product_id,
-        company_id=current_user.company_id
-    )
+    if current_user.role == Role.SUPER_ADMIN.value:
+        product = uow.products.get(
+            db,
+            product_id
+        )
+    else:
+        product = uow.products.first_by(
+            db,
+            id=product_id,
+            company_id=current_user.company_id
+        )
 
     if not product:
         raise HTTPException(
@@ -101,19 +108,28 @@ def get_product(
 
     return product
 
-
-
 def update_product(
-    db,
-    product_id,
+    db: Session,
+    product_id: int,
     data,
     current_user
 ):
-    product = (
-        db.query(Product)
-        .filter(Product.id == product_id)
-        .first()
-    )
+
+    if current_user.role == Role.SUPER_ADMIN.value:
+        product = (
+            db.query(Product)
+            .filter(Product.id == product_id)
+            .first()
+        )
+    else:
+        product = (
+            db.query(Product)
+            .filter(
+                Product.id == product_id,
+                Product.company_id == current_user.company_id
+            )
+            .first()
+        )
 
     if not product:
         raise HTTPException(
@@ -128,33 +144,36 @@ def update_product(
     db.refresh(product)
 
     return product
-
-
 # =====================================================
 # DELETE PRODUCT
 # =====================================================
-
 def delete_product(
     db: Session,
-    product_id: int
+    product_id: int,
+    current_user
 ):
 
     uow = UnitOfWork(db)
 
-    product = uow.products.get(
-        db,
-        product_id
-    )
+    if current_user.role == Role.SUPER_ADMIN.value:
+        product = uow.products.get(
+            db,
+            product_id
+        )
+    else:
+        product = uow.products.first_by(
+            db,
+            id=product_id,
+            company_id=current_user.company_id
+        )
 
     if not product:
-
         raise HTTPException(
             status_code=404,
             detail="Product not found"
         )
 
     try:
-
         uow.products.delete(
             db,
             product

@@ -9,7 +9,7 @@ def verify_company_access(current_user, resource):
             detail="Resource not found."
         )
 
-    if current_user.role.name == "SUPER_ADMIN":
+    if current_user.role.name.upper() == "SUPER_ADMIN":
         return
 
     if getattr(resource, "company_id", None) != current_user.company_id:

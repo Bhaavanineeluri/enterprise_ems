@@ -119,15 +119,15 @@ def global_search(
             {
                 "id": c.id,
                 "code": c.customer_code,
-                "name": c.company_name
+                "name": c.customer_name
             }
             for c in customers
         ],
         "companies": [
             {
                 "id": c.id,
-                "code": None,
-                "name": c.name
+                "code": c.company_code,
+                "name": c.company_name
             }
             for c in companies
         ],

@@ -5,7 +5,6 @@ from typing import Optional
 class CustomerCreate(BaseModel):
     user_id: int
     customer_code: str |None = None
-    company_name: str | None = None
     address: str | None = None
     city: str | None = None
     state: str | None = None
@@ -16,7 +15,6 @@ class CustomerResponse(BaseModel):
     id: int
     user_id: int
     customer_code: str | None = None
-    company_name: str | None
     address: str | None
 
     class Config:
@@ -25,7 +23,6 @@ class CustomerResponse(BaseModel):
 
 class CustomerUpdate(BaseModel):
     customer_code: Optional[str] = None
-    company_name: Optional[str] = None
 
     address: Optional[str] = None
     city: Optional[str] = None

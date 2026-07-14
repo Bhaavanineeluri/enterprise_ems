@@ -2,9 +2,10 @@ from pydantic import BaseModel, EmailStr, Field
 from enum import Enum
 from core.roles import Role
 class UserRole(str, Enum):
+    SUPER_ADMIN = "super_admin"
     ADMIN = "admin"
     EMPLOYEE = "employee"
-    MANAGER ="manager"
+    MANAGER = "manager"
     CUSTOMER = "customer"
 
 class UserRegister(BaseModel):
